@@ -1,0 +1,5 @@
+giturlparse.py
+github3.py
+gitpython
+PyYAML
+retrying
