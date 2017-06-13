@@ -30,11 +30,19 @@ repos. If this isn't defined, `/tmp` is used.
 
 # Examples
 
-Fork bootstrap
+Fork Spoon-Knife
 
-    $ fork-github-repo https://github.com/twbs/bootstrap.git
+    $ fork-github-repo https://github.com/octocat/Spoon-Knife.git
+    Forked https://github.com/octocat/Spoon-Knife.git to https://github.com/gene1wood/Spoon-Knife.git
+    Cloned https://github.com/gene1wood/Spoon-Knife.git to /home/gene/code/github.com/gene1wood/Spoon-Knife
+    Remote "upstream" created for https://github.com/octocat/Spoon-Knife.git
+    Remote "upstream" fetched
 
+Fork Spoon-Knife and create a feature branch called 'my-feature'
 
-Fork 
-
-    $ fork-github-repo https://github.com/twbs/bootstrap.git
+    $ fork-github-repo https://github.com/octocat/Spoon-Knife.git my-feature
+    Forked https://github.com/octocat/Spoon-Knife.git to https://github.com/gene1wood/Spoon-Knife.git
+    Cloned https://github.com/gene1wood/Spoon-Knife.git to /home/gene/code/github.com/gene1wood/Spoon-Knife
+    Remote "upstream" created for https://github.com/octocat/Spoon-Knife.git
+    Remote "upstream" fetched
+    Branch "my-feature" created and checked out
