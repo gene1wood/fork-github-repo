@@ -6,9 +6,6 @@ from retrying import retry  # pip install retrying
 import yaml
 import argparse
 import os.path
-import time
-
-DEFAULT_CONFIG_FILENAME = '~/.github/fork_github_repo.yaml'
 
 
 def github_url_argument(url):
@@ -28,6 +25,10 @@ def github_url_argument(url):
     return url
 
 
+def filename_argument(filename):
+    return os.path.expanduser(filename)
+
+
 def get_config():
     """Parse command line arguments, extracting the config file name,
     read the yaml config file and add in the command line arguments,
@@ -35,23 +36,53 @@ def get_config():
 
     :return: dict of config file settings and command line arguments
     """
-    parser = argparse.ArgumentParser(description='''Fork a GitHub repo, clone 
-    that repo to a local directory, add the upstream remote, create an 
-    optional feature branch and checkout that branch''')
+    DEFAULT_CONFIG_FILENAME = filename_argument(
+        '~/.github/fork_github_repo.yaml')
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description='''\
+Fork a GitHub repo, clone that repo to a local directory, add the upstream
+remote, create an optional feature branch and checkout that branch''',
+        epilog='''\
+The config file with a default location of
+~/.github/fork_github_repo.yaml contains the following settings:
+
+-  github_token : The `GitHub personal access token with the public_repo scope
+   allowed.
+   https://help.github.com/articles/creating-a-personal-access-token-for-the-command-line/
+-  repo_dir : The directory path to the directory containing all your cloned
+    repos. If this isn't defined, /tmp is used.
+
+The file is YAML formatted and the contents look like this :
+
+github_token: 0123456789abcdef0123456789abcdef01234567
+repo_dir: ~/Documents/github.com/example/
+'''
+    )
     parser.add_argument(
         '-c', '--config',
         help='Filename of the yaml config file (default : %s)'
              % DEFAULT_CONFIG_FILENAME,
-        default=argparse.FileType('r')(
-            os.path.expanduser(DEFAULT_CONFIG_FILENAME)
-        ),
-        type=argparse.FileType('r'))
+        default=DEFAULT_CONFIG_FILENAME, type=filename_argument)
     parser.add_argument('url', help="GitHub URL of the upstream repo to fork",
                         type=github_url_argument)
     parser.add_argument('branch', nargs='?', default=None,
                         help="Name of the feature branch to create")
     args = parser.parse_args()
-    config = yaml.safe_load(args.config)
+    if (args.config == DEFAULT_CONFIG_FILENAME) and (
+            not os.path.isfile(args.config)):
+        parser.error('Please create a config file at %s or point to one with '
+                     'the --config option.' % DEFAULT_CONFIG_FILENAME)
+    if not os.path.isfile(args.config):
+        raise argparse.ArgumentTypeError(
+            'Could not find config file %s.' % args.config)
+    with open(args.config, 'r') as f:
+        try:
+            config = yaml.safe_load(f)
+        except:
+            raise argparse.ArgumentTypeError(
+                'Could not parse YAML in %s' % args.config)
+
     config.update(dict(args._get_kwargs()))
     return config
 
@@ -83,19 +114,6 @@ def fork_and_clone_repo(
         exit(1)
     forked_repo = upstream_repo.create_fork()
     print("Forked %s to %s" % (upstream_url, forked_repo.clone_url))
-
-    # Wait for the fork to appear
-    sleeping = False
-    while True:
-        forked_repo = gh.repository(gh.user().login, parsed_url.repo)
-        if forked_repo is not None:
-            if sleeping:
-                print()
-            break
-        else:
-            sleeping = True
-            print('.', end="")
-            time.sleep(1)
 
     # Clone the repo
     repo_dir = os.path.expanduser(os.path.join(repo_dir_root, parsed_url.repo))
