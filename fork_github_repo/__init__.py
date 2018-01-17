@@ -79,12 +79,12 @@ repo_dir: ~/Documents/github.com/example/
     with open(args.config, 'r') as f:
         try:
             config = yaml.safe_load(f)
+            config.update(dict(args._get_kwargs()))
+            return config
         except:
             raise argparse.ArgumentTypeError(
                 'Could not parse YAML in %s' % args.config)
 
-    config.update(dict(args._get_kwargs()))
-    return config
 
 
 def fork_and_clone_repo(
@@ -164,6 +164,7 @@ def main():
         config['repo_dir'],
         config['branch']
     )
+
 
 if __name__ == '__main__':
     main()
