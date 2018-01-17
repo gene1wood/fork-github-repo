@@ -150,9 +150,27 @@ def fork_and_clone_repo(
     if branch_name is None:
         return cloned_repo
     else:
-        branch = cloned_repo.create_head(branch_name)
+        if branch_name not in cloned_repo.refs:
+            branch = cloned_repo.create_head(branch_name)
+            print('Branch "%s" created' % branch_name)
+        else:
+            branch = cloned_repo.heads[branch_name]
+            print('Branch "%s" already exists' % branch_name)
+        if branch_name not in cloned_repo.remotes.origin.refs:
+            push_info = cloned_repo.remotes.origin.push(refspec='{}:{}'.format(
+                branch.path, branch.path))
+            print('Branch "%s" pushed to origin' % branch_name)
+        else:
+            print('Branch "%s" already exists in remote origin' % branch_name)
+        if branch.tracking_branch() is None:
+            branch.set_tracking_branch(cloned_repo.remotes.origin.refs[branch_name])
+            print('Tracking branch "%s" setup for branch %s' % (
+                cloned_repo.remotes.origin.refs[branch_name], branch_name))
+        else:
+            print('Branch "%s" already setup to track %s' % (
+                branch_name, cloned_repo.remotes.origin.refs[branch_name]))
         branch.checkout()
-        print('Branch "%s" created and checked out' % branch_name)
+        print('Branch "%s" checked out' % branch_name)
         return branch
 
 
