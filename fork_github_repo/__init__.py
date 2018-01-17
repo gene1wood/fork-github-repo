@@ -113,7 +113,7 @@ def fork_and_clone_repo(
         print("Unable to find repo %s" % upstream_url)
         exit(1)
     forked_repo = upstream_repo.create_fork()
-    print("Forked %s to %s" % (upstream_url, forked_repo.clone_url))
+    print("Forked %s to %s" % (upstream_url, forked_repo.ssh_url))
 
     # Clone the repo
     repo_dir = os.path.expanduser(os.path.join(repo_dir_root, parsed_url.repo))
@@ -124,8 +124,8 @@ def fork_and_clone_repo(
         cloned_repo = retry(
             wait_exponential_multiplier=1000,
             stop_max_delay=15000
-        )(Repo.clone_from)(forked_repo.clone_url, repo_dir)
-        print("Cloned %s to %s" % (forked_repo.clone_url, repo_dir))
+        )(Repo.clone_from)(forked_repo.ssh_url, repo_dir)
+        print("Cloned %s to %s" % (forked_repo.ssh_url, repo_dir))
 
     # Create the remote upstream
     try:
