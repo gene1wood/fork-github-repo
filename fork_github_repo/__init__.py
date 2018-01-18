@@ -118,7 +118,7 @@ def fork_and_clone_repo(
     # Clone the repo
     repo_dir = os.path.expanduser(os.path.join(repo_dir_root, parsed_url.repo))
     if os.path.isdir(repo_dir):
-        print("Directory %s exists already, assuming it's a clone" % repo_dir)
+        print("Directory %s already exists, assuming it's a clone" % repo_dir)
         cloned_repo = Repo(repo_dir)
     else:
         cloned_repo = retry(
@@ -164,10 +164,10 @@ def fork_and_clone_repo(
             print('Branch "%s" already exists in remote origin' % branch_name)
         if branch.tracking_branch() is None:
             branch.set_tracking_branch(cloned_repo.remotes.origin.refs[branch_name])
-            print('Tracking branch "%s" setup for branch %s' % (
+            print('Tracking branch "%s" setup for branch "%s"' % (
                 cloned_repo.remotes.origin.refs[branch_name], branch_name))
         else:
-            print('Branch "%s" already setup to track %s' % (
+            print('Branch "%s" already setup to track "%s"' % (
                 branch_name, cloned_repo.remotes.origin.refs[branch_name]))
         branch.checkout()
         print('Branch "%s" checked out' % branch_name)
