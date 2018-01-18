@@ -108,12 +108,17 @@ def fork_and_clone_repo(
     parsed_url = parse(upstream_url)
 
     # Fork the repo
-    upstream_repo = gh.repository(parsed_url.owner, parsed_url.repo)
-    if upstream_repo is None:
-        print("Unable to find repo %s" % upstream_url)
-        exit(1)
-    forked_repo = upstream_repo.create_fork()
-    print("Forked %s to %s" % (upstream_url, forked_repo.ssh_url))
+    user = gh.user()
+    forked_repo = gh.repository(user.login, parsed_url.repo)
+    if forked_repo is None:
+        upstream_repo = gh.repository(parsed_url.owner, parsed_url.repo)
+        if upstream_repo is None:
+            print("Unable to find repo %s" % upstream_url)
+            exit(1)
+        forked_repo = upstream_repo.create_fork()
+        print("Forked %s to %s" % (upstream_url, forked_repo.ssh_url))
+    else:
+        print("Forked repo %s already exists" % forked_repo.full_name)
 
     # Clone the repo
     repo_dir = os.path.expanduser(os.path.join(repo_dir_root, parsed_url.repo))
