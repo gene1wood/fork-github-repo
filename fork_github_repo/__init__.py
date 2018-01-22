@@ -1,15 +1,19 @@
 from __future__ import print_function
-import github3  # pip install github3.py
-from git import Repo  # pip install gitpython
-from giturlparse import parse  # pip install giturlparse.py
-from retrying import retry  # pip install retrying
-import yaml
 import argparse
 import os.path
+import re
+import github3  # pip install github3.py
+from git import Repo  # pip install gitpython
+from giturlparse import parse  # pip install giturlparse
+from retrying import retry  # pip install retrying
+import yaml  # pip install PyYAML
+
+
+DEFAULT_CONFIG_FILENAME = '~/.github/fork_github_repo.yaml'
 
 
 def github_url_argument(url):
-    """Validate a url as a GitHub repo url and raise arparse exceptions if
+    """Validate a url as a GitHub repo url and raise argparse exceptions if
     validation fails
 
     :param str url: A GitHub repo URL
@@ -36,8 +40,6 @@ def get_config():
 
     :return: dict of config file settings and command line arguments
     """
-    DEFAULT_CONFIG_FILENAME = filename_argument(
-        '~/.github/fork_github_repo.yaml')
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description='''\
@@ -63,13 +65,14 @@ repo_dir: ~/Documents/github.com/example/
         '-c', '--config',
         help='Filename of the yaml config file (default : %s)'
              % DEFAULT_CONFIG_FILENAME,
-        default=DEFAULT_CONFIG_FILENAME, type=filename_argument)
+        default=filename_argument(DEFAULT_CONFIG_FILENAME),
+        type=filename_argument)
     parser.add_argument('url', help="GitHub URL of the upstream repo to fork",
                         type=github_url_argument)
     parser.add_argument('branch', nargs='?', default=None,
                         help="Name of the feature branch to create")
     args = parser.parse_args()
-    if (args.config == DEFAULT_CONFIG_FILENAME) and (
+    if (args.config == filename_argument(DEFAULT_CONFIG_FILENAME)) and (
             not os.path.isfile(args.config)):
         parser.error('Please create a config file at %s or point to one with '
                      'the --config option.' % DEFAULT_CONFIG_FILENAME)
@@ -79,12 +82,11 @@ repo_dir: ~/Documents/github.com/example/
     with open(args.config, 'r') as f:
         try:
             config = yaml.safe_load(f)
-            config.update(dict(args._get_kwargs()))
+            config.update(vars(args))
             return config
-        except:
+        except yaml.YAMLError:
             raise argparse.ArgumentTypeError(
                 'Could not parse YAML in %s' % args.config)
-
 
 
 def fork_and_clone_repo(
@@ -145,10 +147,8 @@ def fork_and_clone_repo(
         print('Remote "%s" created for %s' % (upstream_name, upstream_url))
 
     # Fetch the remote upstream
-    results = retry(
-        wait_exponential_multiplier=1000,
-        stop_max_delay=15000
-    )(upstream_remote.fetch)()
+    retry(wait_exponential_multiplier=1000, stop_max_delay=15000)(
+        upstream_remote.fetch)()
     print('Remote "%s" fetched' % upstream_name)
 
     # Create and checkout the branch
@@ -162,13 +162,14 @@ def fork_and_clone_repo(
             branch = cloned_repo.heads[branch_name]
             print('Branch "%s" already exists' % branch_name)
         if branch_name not in cloned_repo.remotes.origin.refs:
-            push_info = cloned_repo.remotes.origin.push(refspec='{}:{}'.format(
+            cloned_repo.remotes.origin.push(refspec='{}:{}'.format(
                 branch.path, branch.path))
             print('Branch "%s" pushed to origin' % branch_name)
         else:
             print('Branch "%s" already exists in remote origin' % branch_name)
         if branch.tracking_branch() is None:
-            branch.set_tracking_branch(cloned_repo.remotes.origin.refs[branch_name])
+            branch.set_tracking_branch(
+                cloned_repo.remotes.origin.refs[branch_name])
             print('Tracking branch "%s" setup for branch "%s"' % (
                 cloned_repo.remotes.origin.refs[branch_name], branch_name))
         else:
