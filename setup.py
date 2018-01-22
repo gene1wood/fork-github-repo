@@ -9,7 +9,7 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 
 setup(
     name='fork-github-repo',
-    version='1.0.2',
+    version='1.1.0',
     packages=['fork_github_repo'],
     url='https://github.com/gene1wood/fork-github-repo',
     license=' GPL-3.0',
@@ -25,7 +25,7 @@ setup(
         'Programming Language :: Python :: 2.7'
     ],
     install_requires=[
-        'giturlparse.py',
+        'giturlparse',
         'github3.py',
         'gitpython',
         'PyYAML',
