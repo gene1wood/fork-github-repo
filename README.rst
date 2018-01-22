@@ -23,7 +23,7 @@ Usage
                             ~/.github/fork_github_repo.yaml)
 
     The config file with a default location of
-    ~/.github/fork_github_repo.yaml contains the following settings.
+    ~/.github/fork_github_repo.yaml contains the following settings:
 
     -  github_token : The `GitHub personal access token with the public_repo scope
        allowed.
@@ -56,20 +56,23 @@ Fork Spoon-Knife
 
 ::
 
-    $ fork-github-repo https://github.com/octocat/Spoon-Knife.git
-    Forked https://github.com/octocat/Spoon-Knife.git to https://github.com/gene1wood/Spoon-Knife.git
-    Cloned https://github.com/gene1wood/Spoon-Knife.git to /home/gene/code/github.com/gene1wood/Spoon-Knife
-    Remote "upstream" created for https://github.com/octocat/Spoon-Knife.git
+    $ fork-github-repo https://github.com/octocat/Spoon-Knife
+    Forked https://github.com/octocat/Spoon-Knife to git@github.com:gene1wood/Spoon-Knife.git
+    Cloned git@github.com:gene1wood/Spoon-Knife.git to /path/to/gene1wood/Spoon-Knife
+    Remote "upstream" created for https://github.com/octocat/Spoon-Knife
     Remote "upstream" fetched
 
 Fork Spoon-Knife and create a feature branch called 'my-feature'
 
 ::
 
-    $ fork-github-repo https://github.com/octocat/Spoon-Knife.git my-feature
-    Forked https://github.com/octocat/Spoon-Knife.git to https://github.com/gene1wood/Spoon-Knife.git
-    Cloned https://github.com/gene1wood/Spoon-Knife.git to /home/gene/code/github.com/gene1wood/Spoon-Knife
-    Remote "upstream" created for https://github.com/octocat/Spoon-Knife.git
+    $ fork-github-repo https://github.com/octocat/Spoon-Knife my-feature
+    Forked https://github.com/octocat/Spoon-Knife to git@github.com:gene1wood/Spoon-Knife.git
+    Cloned git@github.com:gene1wood/Spoon-Knife.git to /path/to/gene1wood/Spoon-Knife
+    Remote "upstream" created for https://github.com/octocat/Spoon-Knife
     Remote "upstream" fetched
-    Branch "my-feature" created and checked out
+    Branch "my-feature" created
+    Branch "my-feature" pushed to origin
+    Tracking branch "origin/my-feature" setup for branch "my-feature"
+    Branch "my-feature" checked out
 
