@@ -1,8 +1,7 @@
 from __future__ import print_function
 import argparse
 import os.path
-import re
-import github3  # pip install github3.py
+from agithub.GitHub import GitHub  # pip install agithub
 from git import Repo  # pip install gitpython
 from giturlparse import parse  # pip install giturlparse
 from retrying import retry  # pip install retrying
@@ -82,8 +81,13 @@ repo_dir: ~/Documents/github.com/example/
     with open(args.config, 'r') as f:
         try:
             config = yaml.safe_load(f)
-            config.update(vars(args))
-            return config
+            if isinstance(config, dict):
+                config.update(vars(args))
+                return config
+            else:
+                raise argparse.ArgumentTypeError(
+                    'Config contains %s of "%s" but it should be a dict'
+                    % (type(config), config))
         except yaml.YAMLError:
             raise argparse.ArgumentTypeError(
                 'Could not parse YAML in %s' % args.config)
@@ -106,21 +110,23 @@ def fork_and_clone_repo(
     """
     # Scope needed is `public_repo` to fork and clone public repos
     # https://developer.github.com/apps/building-integrations/setting-up-and-registering-oauth-apps/about-scopes-for-oauth-apps/
-    gh = github3.login(token=github_token)
+    gh = GitHub(token=github_token)
     parsed_url = parse(upstream_url)
 
     # Fork the repo
-    user = gh.user()
-    forked_repo = gh.repository(user.login, parsed_url.repo)
-    if forked_repo is None:
-        upstream_repo = gh.repository(parsed_url.owner, parsed_url.repo)
-        if upstream_repo is None:
+    status, user = gh.user.get()
+    status, forked_repo = gh.repos[user['login']][parsed_url.repo].get()
+    if status == 404:
+        status, upstream_repo = (
+            gh.repos[parsed_url.owner][parsed_url.repo].get())
+        if status == 404:
             print("Unable to find repo %s" % upstream_url)
             exit(1)
-        forked_repo = upstream_repo.create_fork()
-        print("Forked %s to %s" % (upstream_url, forked_repo.ssh_url))
+        status, forked_repo = (
+            gh.repos[parsed_url.owner][parsed_url.repo].forks.post())
+        print("Forked %s to %s" % (upstream_url, forked_repo['ssh_url']))
     else:
-        print("Forked repo %s already exists" % forked_repo.full_name)
+        print("Forked repo %s already exists" % forked_repo['full_name'])
 
     # Clone the repo
     repo_dir = os.path.expanduser(os.path.join(repo_dir_root, parsed_url.repo))
@@ -131,8 +137,8 @@ def fork_and_clone_repo(
         cloned_repo = retry(
             wait_exponential_multiplier=1000,
             stop_max_delay=15000
-        )(Repo.clone_from)(forked_repo.ssh_url, repo_dir)
-        print("Cloned %s to %s" % (forked_repo.ssh_url, repo_dir))
+        )(Repo.clone_from)(forked_repo['ssh_url'], repo_dir)
+        print("Cloned %s to %s" % (forked_repo['ssh_url'], repo_dir))
 
     # Create the remote upstream
     try:
