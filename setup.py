@@ -9,7 +9,7 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 
 setup(
     name='fork-github-repo',
-    version='1.1.0',
+    version='1.2.0',
     packages=['fork_github_repo'],
     url='https://github.com/gene1wood/fork-github-repo',
     license=' GPL-3.0',
