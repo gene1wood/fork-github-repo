@@ -26,7 +26,7 @@ setup(
     ],
     install_requires=[
         'giturlparse',
-        'github3.py',
+        'agithub',
         'gitpython',
         'PyYAML',
         'retrying'
