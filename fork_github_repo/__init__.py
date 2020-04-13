@@ -7,7 +7,6 @@ from giturlparse import parse  # pip install giturlparse
 from retrying import retry  # pip install retrying
 import yaml  # pip install PyYAML
 
-
 DEFAULT_CONFIG_FILENAME = '~/.github/fork_github_repo.yaml'
 
 
@@ -58,6 +57,7 @@ The file is YAML formatted and the contents look like this :
 
 github_token: 0123456789abcdef0123456789abcdef01234567
 repo_dir: ~/Documents/github.com/example/
+organization:
 '''
     )
     parser.add_argument(
@@ -95,7 +95,7 @@ repo_dir: ~/Documents/github.com/example/
 
 def fork_and_clone_repo(
         upstream_url, github_token, repo_dir_root, branch_name=None,
-        upstream_name='upstream'):
+        upstream_name='upstream', organization_name=None):
     """Fork a GitHub repo, clone that repo to a local directory,
     add the upstream remote, create an optional feature branch and checkout
     that branch
@@ -106,6 +106,7 @@ def fork_and_clone_repo(
     should be written
     :param str branch_name: The name of the git feature branch to create
     :param str upstream_name: The name to use for the remote upstream
+    :param str organization_name: The name the organization that replace actual user
     :return: github3.Head object representing the new feature branch
     """
     # Scope needed is `public_repo` to fork and clone public repos
@@ -115,18 +116,29 @@ def fork_and_clone_repo(
 
     # Fork the repo
     status, user = gh.user.get()
-    status, forked_repo = gh.repos[user['login']][parsed_url.repo].get()
+    user_name = user['login'] if not organization_name else organization_name
+    status, forked_repo = gh.repos[user_name][parsed_url.repo].get()
     if status == 404:
         status, upstream_repo = (
             gh.repos[parsed_url.owner][parsed_url.repo].get())
         if status == 404:
             print("Unable to find repo %s" % upstream_url)
             exit(1)
+        args = {}
+        if organization_name:
+            args["organization"] = organization_name
         status, forked_repo = (
-            gh.repos[parsed_url.owner][parsed_url.repo].forks.post())
-        print("Forked %s to %s" % (upstream_url, forked_repo['ssh_url']))
-    else:
+            gh.repos[parsed_url.owner][parsed_url.repo].forks.post(**args))
+        if status == 404:
+            print("Error when forking repo %s" % forked_repo)
+            exit(1)
+        else:
+            print("Forked %s to %s" % (upstream_url, forked_repo['ssh_url']))
+    elif status == 202:
         print("Forked repo %s already exists" % forked_repo['full_name'])
+    else:
+        print("Status not supported: %s - %s" % (status, forked_repo))
+        exit(1)
 
     # Clone the repo
     repo_dir = os.path.expanduser(os.path.join(repo_dir_root, parsed_url.repo))
@@ -192,7 +204,8 @@ def main():
         config['url'],
         config['github_token'],
         config['repo_dir'],
-        config['branch']
+        branch_name=config['branch'],
+        organization_name=config['organization_name'],
     )
 
 

@@ -35,6 +35,7 @@ Usage
 
     github_token: 0123456789abcdef0123456789abcdef01234567
     repo_dir: ~/Documents/github.com/example/
+    organization_name:
 
 
 Config
@@ -48,6 +49,8 @@ The config file with a default location of
    with the ``public_repo`` scope allowed
 -  ``repo_dir`` : The directory path to the directory containing all
    your cloned repos. If this isn't defined, ``/tmp`` is used.
+-  ``organization_name`` : The organization to fork on it, this will replace the fork
+   from the users repo.
 
 Examples
 ========
